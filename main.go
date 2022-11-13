@@ -65,9 +65,9 @@ func main() {
 	//var jbody interface{}
 	//var vmr *proxmox.VmRef
 
-	fmt.Println("create qemu")
-	if err := createQemu(c, 131, "create_qemu.json"); err != nil {
-		fmt.Printf("create qemu failed: %v\n", err)
+	fmt.Println("create storage")
+	if err := createStorage(c, "local-temp", "create_storage.json"); err != nil {
+		fmt.Printf("create storage failed: %v\n", err)
 	}
 
 }
@@ -211,13 +211,13 @@ func getVMState(c *proxmox.Client, vmID int) (map[string]interface{}, error) {
 	return info, nil
 }
 
-//func createStorage(c *proxmox.Client, storageID string) error {
-//	config, err := proxmox.NewConfigStorageFromJson(GetConfig(*fConfigFile))
-//	if err != nil {
-//		return err
-//	}
-//	return config.CreateWithValidate(storageID, c)
-//}
+func createStorage(c *proxmox.Client, storageID string, fConfigFile string) error {
+	config, err := proxmox.NewConfigStorageFromJson(GetConfig(fConfigFile))
+	if err != nil {
+		return err
+	}
+	return config.CreateWithValidate(storageID, c)
+}
 
 //func updateStorage(c *proxmox.Client, storageID string) error{
 //	config, err := proxmox.NewConfigStorageFromJson(GetConfig(*fConfigFile))
