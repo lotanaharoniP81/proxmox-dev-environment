@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	//"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/Telmate/proxmox-api-go/cli"
@@ -11,7 +10,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	//"sort"
 	"strconv"
 )
 
@@ -48,10 +46,6 @@ func main() {
 		err = c.Login(PmUser, PmPass, os.Getenv("PM_OTP"))
 		failError(err)
 	}
-	//fmt.Println("vmid!!!!!!!!!!!!!!!!!!!!!")
-	//fmt.Println(flag.Args()[1])
-	//fmt.Printf("%+v", flag.Args()[1])
-	//fmt.Printf("%d", *fvmid)
 
 	vmid := *fvmid
 	if vmid < 0 {
@@ -67,14 +61,8 @@ func main() {
 		}
 	}
 
-	//time.Sleep(time.Hour)
 	//var jbody interface{}
 	//var vmr *proxmox.VmRef
-
-	//if len(flag.Args()) == 0 {
-	//	fmt.Printf("Missing action, try start|stop vmid\n")
-	//	os.Exit(0)
-	//}
 
 	fmt.Println("create qemu")
 	s := ""
@@ -110,16 +98,12 @@ func userRequiresAPIToken(userID string) bool {
 func GetConfig(configFile string) (configSource []byte) {
 	var err error
 	if configFile != "" {
-		fmt.Println("config file is not empty.....")
 		configSource, err = os.ReadFile(configFile)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		fmt.Println("config file is empty.....")
-		//configSource = []byte("{\"name\":\"webserver14\",\"memory\":2048,\"cores\":1,\"sockets\":1,\"kvm\":false,\"iso\":\"local:iso/ubuntu-22.04.1-live-server-amd64.iso\"}")
 		configSource = []byte("{\"name\":\"webserver20\",\"memory\":2048,\"cores\":1,\"sockets\":1,\"kvm\":false,\"iso\":\"local:iso/ubuntu-22.04.1-live-server-amd64.iso\"}")
-		//configSource = []byte("{\n  \"name\": \"webserver3\",\n  \"cores\": 1,\n  \"sockets\": 1,\n  \"memory\": 2048,\n  \"desc\": \"Test proxmox-api-go\",\n  \"iso\": \"local:iso/ubuntu-22.04.1-live-server-amd64.iso\",\n  \"kvm\": \"false\",\n  \"onboot\": false\n}")
 		//configSource, err = io.ReadAll(os.Stdin)
 		//configSource, err = os.ReadFile("installQuemo.json")
 		if err != nil {
