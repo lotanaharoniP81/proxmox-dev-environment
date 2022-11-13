@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/Telmate/proxmox-api-go/cli"
@@ -112,3 +113,117 @@ func GetConfig(configFile string) (configSource []byte) {
 	}
 	return
 }
+
+func getVMList(c *proxmox.Client) (string, error) {
+	vms, err := c.GetVmList()
+	if err != nil {
+		return "", err
+	}
+	vmList, err := json.Marshal(vms)
+	if err != nil {
+		return "", err
+	}
+	return string(vmList), nil
+}
+
+func getStorage(c *proxmox.Client, storageID string) (string, error) {
+	config, err := proxmox.NewConfigStorageFromApi(storageID, c)
+	if err != nil {
+		return "", err
+	}
+	cj, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(cj), nil
+}
+
+func deleteStorage(c *proxmox.Client, storageID string) error {
+	return c.DeleteStorage(storageID)
+}
+
+func stopVM(c *proxmox.Client, vmID int) error {
+	vmr := proxmox.NewVmRef(vmID)
+	_, err := c.StopVm(vmr)
+	return err
+}
+
+func startVM(c *proxmox.Client, vmID int) error {
+	vmr := proxmox.NewVmRef(vmID)
+	_, err := c.StartVm(vmr)
+	return err
+}
+
+func destroyVM(c *proxmox.Client, vmID int) error {
+	vmr := proxmox.NewVmRef(vmID)
+	_, err := c.StopVm(vmr)
+	if err != nil {
+		return err
+	}
+	_, err = c.DeleteVm(vmr)
+	return err
+}
+
+func ifVMIdExists(c *proxmox.Client, vmID int) (bool, error) {
+	ifVMIdExists, err := c.VMIdExists(vmID)
+	if err != nil {
+		return false, err
+	}
+	return ifVMIdExists, nil
+}
+
+func resetVM(c *proxmox.Client, vmID int) error {
+	vmr := proxmox.NewVmRef(vmID)
+	_, err := c.ResetVm(vmr)
+	return err
+}
+
+func getStorageList(c *proxmox.Client) (string, error) {
+	storage, err := c.GetStorageList()
+	if err != nil {
+		return "", err
+	}
+	storageList, err := json.Marshal(storage)
+	if err != nil {
+		return "", err
+	}
+	return string(storageList), nil
+}
+
+func getNodeList(c *proxmox.Client) (map[string]interface{}, error) {
+	return c.GetNodeList()
+}
+
+func getVMInfo(c *proxmox.Client, vmID int) (map[string]interface{}, error) {
+	vmr := proxmox.NewVmRef(vmID)
+	info, err := c.GetVmInfo(vmr)
+	if err != nil {
+		return nil, err
+	}
+	return info, nil
+}
+
+func getVMState(c *proxmox.Client, vmID int) (map[string]interface{}, error) {
+	vmr := proxmox.NewVmRef(vmID)
+	info, err := c.GetVmState(vmr)
+	if err != nil {
+		return nil, err
+	}
+	return info, nil
+}
+
+//func createStorage(c *proxmox.Client, storageID string) error {
+//	config, err := proxmox.NewConfigStorageFromJson(GetConfig(*fConfigFile))
+//	if err != nil {
+//		return err
+//	}
+//	return config.CreateWithValidate(storageID, c)
+//}
+
+//func updateStorage(c *proxmox.Client, storageID string) error{
+//	config, err := proxmox.NewConfigStorageFromJson(GetConfig(*fConfigFile))
+//	if err != nil {
+//		return err
+//	}
+//	return config.UpdateWithValidate(storageID, c)
+//}
