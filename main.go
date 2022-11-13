@@ -66,15 +66,14 @@ func main() {
 	//var vmr *proxmox.VmRef
 
 	fmt.Println("create qemu")
-	s := ""
-	if err := createQemu(c, 130, &s); err != nil {
+	if err := createQemu(c, 131, "create_qemu.json"); err != nil {
 		fmt.Printf("create qemu failed: %v\n", err)
 	}
 
 }
 
-func createQemu(c *proxmox.Client, vmID int, fConfigFile *string) error {
-	config, err := proxmox.NewConfigQemuFromJson(GetConfig(*fConfigFile))
+func createQemu(c *proxmox.Client, vmID int, fConfigFile string) error {
+	config, err := proxmox.NewConfigQemuFromJson(GetConfig(fConfigFile))
 	if err != nil {
 		return err
 	}
