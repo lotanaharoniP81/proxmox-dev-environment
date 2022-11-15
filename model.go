@@ -6,4 +6,7 @@ const (
 	PmUser   = "root@pam"
 	node     = "130"
 	host     = "host1"
+	caPem    = ""
+	certPem  = ""
+	certKey  = ""
 )

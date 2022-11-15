@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -28,8 +29,17 @@ func main() {
 	taskTimeout := flag.Int("timeout", 300, "api task timeout in seconds")
 	proxyURL := flag.String("proxy", "", "proxy url to connect to")
 	fvmid := flag.Int("vmid", -1, "custom vmid (instead of auto)")
+	ca := []byte(caPem)
+	cert := []byte(certPem)
+	key := []byte(certKey)
 	flag.Parse()
-	tlsconf := &tls.Config{InsecureSkipVerify: true}
+	tlsconf, err := TLSConfig(ca, cert, key)
+	if err != nil {
+		failError(err)
+		os.Exit(0)
+	}
+	tlsconf.InsecureSkipVerify = false
+	//tlsconf := &tls.Config{InsecureSkipVerify: true}
 	if !*insecure {
 		tlsconf = nil
 	}
@@ -65,9 +75,16 @@ func main() {
 	//var jbody interface{}
 	//var vmr *proxmox.VmRef
 
-	fmt.Println("create storage")
-	if err := createStorage(c, "local-temp", "create_storage.json"); err != nil {
-		fmt.Printf("create storage failed: %v\n", err)
+	//fmt.Println("create storage")
+	//if err := createStorage(c, "local-temp", "create_storage.json"); err != nil {
+	//	fmt.Printf("create storage failed: %v\n", err)
+	//}
+
+	fmt.Println("get vm list")
+	if list, err := getVMList(c); err != nil {
+		fmt.Printf("start vm failed: %v\n", err)
+	} else {
+		fmt.Println(list)
 	}
 
 }
@@ -217,6 +234,26 @@ func createStorage(c *proxmox.Client, storageID string, fConfigFile string) erro
 		return err
 	}
 	return config.CreateWithValidate(storageID, c)
+}
+
+func TLSConfig(ca, cert, key []byte) (*tls.Config, error) {
+	if len(ca) != 0 && len(cert) != 0 && len(key) != 0 {
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(ca)
+
+		cert, err := tls.X509KeyPair(cert, key)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load client cert and key: %w", err)
+		}
+
+		config := &tls.Config{
+			RootCAs:            caCertPool,
+			Certificates:       []tls.Certificate{cert},
+			InsecureSkipVerify: false,
+		}
+		return config, nil
+	}
+	return nil, fmt.Errorf("certificates length are not valid")
 }
 
 //func updateStorage(c *proxmox.Client, storageID string) error{
