@@ -16,14 +16,13 @@ type ProxmoxAPI struct {
 	clientCert []byte
 	clientKey  []byte
 
-	client *proxmox.Client
-
 	//SemaphoreLocker // todo: check
 }
 
 // QemuCreate something.... (it's the same as Libvirt '')
-func (api *ProxmoxAPI) QemuCreate(ctx context.Context, log Logger, host string, vmID int, fConfigFile string) error {
+func (api *ProxmoxAPI) QemuCreate(ctx context.Context, log Logger, uri string, host string, vmID int, fConfigFile string) error {
 	//deadline, cancel := context.WithDeadline(ctx, time.Now().Add(api.ProxmoxRequestTimeout()))
+	conn, err := Connect(ctx, log, uri, api.caCert, api.clientCert, api.clientKey) // todo: we don't need the context?
 
 	// todo: check on context in actions?
 	config, err := GetConfig(fConfigFile)
@@ -34,9 +33,10 @@ func (api *ProxmoxAPI) QemuCreate(ctx context.Context, log Logger, host string, 
 	if err != nil {
 		return err
 	}
+	log.Infof("successfully connected. proxmox server: %q", uri)
 	vmr := proxmox.NewVmRef(vmID)
 	vmr.SetNode(host)
-	return configQemu.CreateVm(vmr, api.client)
+	return configQemu.CreateVm(vmr, conn)
 }
 
 // Logger represents log object interface
@@ -49,6 +49,7 @@ type Logger interface {
 	Debugf(format string, a ...interface{})
 }
 
+// todo: lower case
 // GetConfig get config from file
 func GetConfig(configFile string) ([]byte, error) { // todo: change to 'getConfig'
 	if configFile == "" {
@@ -62,6 +63,7 @@ func GetConfig(configFile string) ([]byte, error) { // todo: change to 'getConfi
 	return configSource, nil
 }
 
+// todo: delete
 // tlsConfig something... (it's like Libvirt connect)
 func tlsConfig(ca, cert, key []byte) (*tls.Config, error) {
 	if len(ca) != 0 && len(cert) != 0 && len(key) != 0 {
