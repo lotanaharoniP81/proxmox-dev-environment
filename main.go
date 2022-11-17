@@ -86,7 +86,11 @@ func main() {
 }
 
 func createQemu(c *proxmox.Client, vmID int, fConfigFile string) error {
-	config, err := proxmox.NewConfigQemuFromJson(GetConfig(fConfigFile))
+	configTemp, err := GetConfig(fConfigFile)
+	if err != nil {
+		return err
+	}
+	config, err := proxmox.NewConfigQemuFromJson(configTemp)
 	if err != nil {
 		return err
 	}
@@ -206,7 +210,11 @@ func getVMState(c *proxmox.Client, vmID int) (map[string]interface{}, error) {
 }
 
 func createStorage(c *proxmox.Client, storageID string, fConfigFile string) error {
-	config, err := proxmox.NewConfigStorageFromJson(GetConfig(fConfigFile))
+	configTemp, err := GetConfig(fConfigFile)
+	if err != nil {
+		return err
+	}
+	config, err := proxmox.NewConfigStorageFromJson(configTemp)
 	if err != nil {
 		return err
 	}
