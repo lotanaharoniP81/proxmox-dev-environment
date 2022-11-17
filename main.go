@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/Telmate/proxmox-api-go/cli"
 	_ "github.com/Telmate/proxmox-api-go/cli/command/commands"
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"log"
@@ -16,13 +15,6 @@ import (
 )
 
 func main() {
-	if os.Getenv("NEW_CLI") == "true" {
-		err := cli.Execute()
-		if err != nil {
-			failError(err)
-		}
-		os.Exit(0)
-	}
 	insecure := flag.Bool("insecure", true, "TLS insecure mode")
 	proxmox.Debug = flag.Bool("debug", false, "debug mode")
 	//fConfigFile := flag.String("file", "", "file to get the config from")
@@ -82,11 +74,17 @@ func main() {
 
 	fmt.Println("get vm list")
 	if list, err := getVMList(c); err != nil {
-		fmt.Printf("start vm failed: %v\n", err)
+		fmt.Printf("get vm list failed: %v\n", err)
 	} else {
-		fmt.Println(list)
+		fmt.Printf("get vm list succeeded! the list: %v\n", list)
 	}
 
+	fmt.Println("create vm")
+	if err := createQemu(c, 101, "create_qemu.json"); err != nil {
+		fmt.Printf("create vm failed: %v\n", err)
+	} else {
+		fmt.Println("create vm succeeded!")
+	}
 }
 
 func createQemu(c *proxmox.Client, vmID int, fConfigFile string) error {
@@ -116,13 +114,7 @@ func GetConfig(configFile string) (configSource []byte) {
 	var err error
 	if configFile != "" {
 		configSource, err = os.ReadFile(configFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		configSource = []byte("{\"name\":\"webserver20\",\"memory\":2048,\"cores\":1,\"sockets\":1,\"kvm\":false,\"iso\":\"local:iso/ubuntu-22.04.1-live-server-amd64.iso\"}")
-		//configSource, err = io.ReadAll(os.Stdin)
-		//configSource, err = os.ReadFile("installQuemo.json")
+		//configSource = []byte("{\"name\":\"webserver20\",\"memory\":2048,\"cores\":1,\"sockets\":1,\"kvm\":false,\"iso\":\"local:iso/ubuntu-22.04.1-live-server-amd64.iso\"}")
 		if err != nil {
 			log.Fatal(err)
 		}
