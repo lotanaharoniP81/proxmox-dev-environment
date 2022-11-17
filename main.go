@@ -1,66 +1,68 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
+	"time"
+
 	_ "github.com/Telmate/proxmox-api-go/cli/command/commands"
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"log"
-	"os"
+	//"os"
 	"regexp"
-	"strconv"
+	//"strconv"
 )
 
 func main() {
-	insecure := flag.Bool("insecure", true, "TLS insecure mode")
-	proxmox.Debug = flag.Bool("debug", false, "debug mode")
-	//fConfigFile := flag.String("file", "", "file to get the config from")
-	taskTimeout := flag.Int("timeout", 300, "api task timeout in seconds")
-	proxyURL := flag.String("proxy", "", "proxy url to connect to")
-	fvmid := flag.Int("vmid", -1, "custom vmid (instead of auto)")
+	//insecure := flag.Bool("insecure", true, "TLS insecure mode")
+	//proxmox.Debug = flag.Bool("debug", false, "debug mode")
+	////fConfigFile := flag.String("file", "", "file to get the config from")
+	//taskTimeout := flag.Int("timeout", 300, "api task timeout in seconds")
+	//proxyURL := flag.String("proxy", "", "proxy url to connect to")
+	//fvmid := flag.Int("vmid", -1, "custom vmid (instead of auto)")
 	ca := []byte(caPem)
 	cert := []byte(certPem)
 	key := []byte(certKey)
-	flag.Parse()
-	tlsconf, err := tlsConfig(ca, cert, key)
-	if err != nil {
-		failError(err)
-		os.Exit(0)
-	}
-	tlsconf.InsecureSkipVerify = false
-	//tlsconf := &tls.Config{InsecureSkipVerify: true}
-	if !*insecure {
-		tlsconf = nil
-	}
-	//c, err := proxmox.NewClient(PmApiUrl, nil, os.Getenv("PM_HTTP_HEADERS"), tlsconf, *proxyURL, *taskTimeout)
-	c, err := proxmox.NewClient(PmApiUrl, nil, "", tlsconf, *proxyURL, *taskTimeout)
-	failError(err)
-	if userRequiresAPIToken(PmUser) {
-		c.SetAPIToken(PmUser, PmPass)
-		// As test, get the version of the server
-		_, err := c.GetVersion()
-		if err != nil {
-			log.Fatalf("login error: %s", err)
-		}
-	} else {
-		err = c.Login(PmUser, PmPass, os.Getenv("PM_OTP"))
-		failError(err)
-	}
-
-	vmid := *fvmid
-	if vmid < 0 {
-		//if len(flag.Args()) > 1 {
-		if true {
-			vmid, err = strconv.Atoi("123")
-			if err != nil {
-				fmt.Println("error")
-				vmid = 0
-			}
-		} else if len(flag.Args()) == 0 || (flag.Args()[0] == "idstatus") {
-			vmid = 0
-		}
-	}
+	//flag.Parse()
+	//tlsconf, err := tlsConfig(ca, cert, key)
+	//if err != nil {
+	//	failError(err)
+	//	os.Exit(0)
+	//}
+	//tlsconf.InsecureSkipVerify = false
+	////tlsconf := &tls.Config{InsecureSkipVerify: true}
+	//if !*insecure {
+	//	tlsconf = nil
+	//}
+	////c, err := proxmox.NewClient(PmApiUrl, nil, os.Getenv("PM_HTTP_HEADERS"), tlsconf, *proxyURL, *taskTimeout)
+	//c, err := proxmox.NewClient(PmApiUrl, nil, "", tlsconf, *proxyURL, *taskTimeout)
+	//failError(err)
+	//if userRequiresAPIToken(PmUser) {
+	//	c.SetAPIToken(PmUser, PmPass)
+	//	// As test, get the version of the server
+	//	_, err := c.GetVersion()
+	//	if err != nil {
+	//		log.Fatalf("login error: %s", err)
+	//	}
+	//} else {
+	//	err = c.Login(PmUser, PmPass, os.Getenv("PM_OTP"))
+	//	failError(err)
+	//}
+	//
+	//vmid := *fvmid
+	//if vmid < 0 {
+	//	//if len(flag.Args()) > 1 {
+	//	if true {
+	//		vmid, err = strconv.Atoi("123")
+	//		if err != nil {
+	//			fmt.Println("error")
+	//			vmid = 0
+	//		}
+	//	} else if len(flag.Args()) == 0 || (flag.Args()[0] == "idstatus") {
+	//		vmid = 0
+	//	}
+	//}
 
 	//var jbody interface{}
 	//var vmr *proxmox.VmRef
@@ -70,18 +72,28 @@ func main() {
 	//	fmt.Printf("create storage failed: %v\n", err)
 	//}
 
-	fmt.Println("get vm list")
-	if list, err := getVMList(c); err != nil {
-		fmt.Printf("get vm list failed: %v\n", err)
-	} else {
-		fmt.Printf("get vm list succeeded! the list: %v\n", list)
-	}
+	//fmt.Println("get vm list")
+	//if list, err := getVMList(c); err != nil {
+	//	fmt.Printf("get vm list failed: %v\n", err)
+	//} else {
+	//	fmt.Printf("get vm list succeeded! the list: %v\n", list)
+	//}
 
-	fmt.Println("create vm")
-	if err := createQemu(c, 101, "create_qemu.json"); err != nil {
-		fmt.Printf("create vm failed: %v\n", err)
-	} else {
-		fmt.Println("create vm succeeded!")
+	//fmt.Println("create vm")
+	//if err := createQemu(c, 102, "create_qemu.json"); err != nil {
+	//	fmt.Printf("create vm failed: %v\n", err)
+	//} else {
+	//	fmt.Println("create vm succeeded!")
+	//}
+
+	// todo: new
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*30)
+	defer cancel()
+	p := NewProxmoxAPI(ca, cert, key)
+	err := p.QemuCreate(ctx, PmApiUrl, hostConst, 102, "create_qemu.json")
+	if err != nil {
+		fmt.Printf("error! %v\n", err)
+		return
 	}
 }
 

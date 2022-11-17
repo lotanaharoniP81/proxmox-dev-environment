@@ -19,10 +19,20 @@ type ProxmoxAPI struct {
 	//SemaphoreLocker // todo: check
 }
 
+// NewProxmoxAPI constructor for ProxmoxAPI object
+func NewProxmoxAPI(ca, cert, key []byte) *ProxmoxAPI {
+	return &ProxmoxAPI{
+		caCert:     ca,
+		clientCert: cert,
+		clientKey:  key,
+	}
+}
+
+// todo: add logger
 // QemuCreate something.... (it's the same as Libvirt '')
-func (api *ProxmoxAPI) QemuCreate(ctx context.Context, log Logger, uri string, host string, vmID int, fConfigFile string) error {
+func (api *ProxmoxAPI) QemuCreate(ctx context.Context, uri string, host string, vmID int, fConfigFile string) error {
 	//deadline, cancel := context.WithDeadline(ctx, time.Now().Add(api.ProxmoxRequestTimeout()))
-	conn, err := Connect(ctx, log, uri, api.caCert, api.clientCert, api.clientKey) // todo: we don't need the context?
+	conn, err := Connect(ctx, uri, api.caCert, api.clientCert, api.clientKey) // todo: we don't need the context?
 
 	// todo: check on context in actions?
 	config, err := GetConfig(fConfigFile)
@@ -33,7 +43,7 @@ func (api *ProxmoxAPI) QemuCreate(ctx context.Context, log Logger, uri string, h
 	if err != nil {
 		return err
 	}
-	log.Infof("successfully connected. proxmox server: %q", uri)
+	//log.Infof("successfully connected. proxmox server: %q", uri)
 	vmr := proxmox.NewVmRef(vmID)
 	vmr.SetNode(host)
 	return configQemu.CreateVm(vmr, conn)
