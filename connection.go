@@ -45,10 +45,7 @@ func Connect(ctx context.Context, uri string, ca, cert, key []byte) (client *pro
 	if err != nil {
 		return nil, fmt.Errorf("failed creating new proxmox client: %w", err)
 	}
-	//}
-	//	os.Exit(0)
-	//	failError(err)
-	//if err != nil {
+
 	if userRequiresAPIToken(PmUser) {
 		conn.SetAPIToken(PmUser, PmPass)
 		// As test, get the version of the server

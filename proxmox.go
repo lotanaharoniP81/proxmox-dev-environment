@@ -29,7 +29,7 @@ func NewProxmoxAPI(ca, cert, key []byte) *ProxmoxAPI {
 }
 
 // todo: add logger
-// QemuCreate something.... (it's the same as Libvirt '')
+// QemuCreate something.... (it's the same as Libvirt 'domainCreate')
 func (api *ProxmoxAPI) QemuCreate(ctx context.Context, uri string, host string, vmID int, fConfigFile string) error {
 	//deadline, cancel := context.WithDeadline(ctx, time.Now().Add(api.ProxmoxRequestTimeout()))
 	conn, err := Connect(ctx, uri, api.caCert, api.clientCert, api.clientKey) // todo: we don't need the context?
